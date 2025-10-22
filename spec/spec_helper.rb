@@ -8,7 +8,7 @@ RSpec.configure do |let|
 
   # Only run a specific file, using the ENV variable
   # Example: FILE=spec/blankgem/version_spec.rb bundle exec rake spec
-  let.pattern = ENV["FILE"]
+  let.pattern = ENV.fetch("FILE", nil)
 
   # Show the slowest examples in the suite
   let.profile_examples = true
