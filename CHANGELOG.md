@@ -5,6 +5,7 @@
   - Requires paper_trail 17
   - Replaces ar_after_transaction with an `after_commit` on the record's current transaction, so only a rollback on the record's own database drops the job. Remove any `ActiveRecord::Base.normally_open_transactions` setup; `with_versioning` no longer takes `expected_open_transactions:`
   - `PaperTrail::Background::Job` sets `enqueue_after_transaction_commit = false` on the class that includes it. With the setting on, Active Job would wait for every open transaction on every database, and a rollback on another database would drop the job
+  - `with_versioning` needs each example to run in a non-joinable transaction, as Rails transactional fixtures and DatabaseCleaner's `:transaction` strategy do. Inside a plain `ActiveRecord::Base.transaction` wrapper the example's rollback drops the job before it writes a version
   - A record created inside a savepoint that rolls back no longer enqueues a version job
   - Inside `transaction(joinable: false)` the gem enqueues the job when the record's savepoint is released, the same moment Rails runs `after_commit` callbacks. If the outer transaction then rolls back, the job still writes a version for a row that never committed. 1.x waited for the outer commit
   - `paper_trail.update_columns` on an async model no longer raises `NameError`

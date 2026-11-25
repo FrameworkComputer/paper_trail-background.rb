@@ -28,6 +28,8 @@ PaperTrail::Background::Config.configure do |config|
 end
 ```
 
+With `opt_in` unset (the default), every `has_paper_trail` model without an explicit `async:` writes its create, update, `update_columns` and destroy versions through `VersionJob`, so `record.versions` stays empty until the job runs.
+
 If opt-in behavior is set to `true`, you can enable async paper trails by specifying `async: true` in a given model's paper trail options:
 
 ``` ruby
