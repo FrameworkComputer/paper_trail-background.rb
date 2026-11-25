@@ -1,4 +1,3 @@
-require "pry"
 require "rspec"
 require "paper_trail-background"
 

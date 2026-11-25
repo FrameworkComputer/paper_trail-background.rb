@@ -7,20 +7,25 @@ concurrency:
 on:
   pull_request:
     branches:
-      - core
+      - main
   push:
     branches:
-      - core
+      - main
   workflow_dispatch:
 
 jobs:
   checking:
-    name: Unit Tests
+    name: Unit Tests (Ruby ${{ matrix.ruby }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.4", "4.0"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ruby/setup-ruby@v1
         with:
+          ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - name: Rubocop check
         run: |
@@ -30,4 +35,4 @@ jobs:
           --fail-level warning \
           lib/
       - name: Run tests
-        run: bundle exec rspec --backtrace --profile 10 lib/**/*_spec.rb
+        run: bundle exec rake spec
