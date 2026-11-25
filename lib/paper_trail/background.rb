@@ -10,8 +10,6 @@ module PaperTrail
 
   module Background
     # @api private
-    # @return - The created version object, so that plugins can use it, e.g.
-    # paper_trail-association_tracking
     def record_create
       return unless enabled?
 
@@ -29,8 +27,6 @@ module PaperTrail
     # `recording_order` is "after" or "before". See ModelConfig#on_destroy.
     #
     # @api private
-    # @return - The created version object, so that plugins can use it, e.g.
-    # paper_trail-association_tracking
     def record_destroy(recording_order)
       return unless enabled?
       return super if @record.paper_trail_options[:async].blank?
@@ -48,8 +44,6 @@ module PaperTrail
     end
 
     # @api private
-    # @return - The created version object, so that plugins can use it, e.g.
-    # paper_trail-association_tracking
     def record_update(force:, in_after_callback:, is_touch:)
       return unless enabled?
       return super if Config.configuration.opt_in && @record.paper_trail_options[:async].blank?
@@ -66,8 +60,6 @@ module PaperTrail
     end
 
     # @api private
-    # @return - The created version object, so that plugins can use it, e.g.
-    # paper_trail-association_tracking
     def record_update_columns(changes)
       return unless enabled?
       return super if Config.configuration.opt_in && @record.paper_trail_options[:async].blank?
