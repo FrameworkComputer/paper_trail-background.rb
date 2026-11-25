@@ -15,7 +15,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activerecord", ">= 8.0"
-  spec.add_dependency "ar_after_transaction", ">= 1.1.0"
-  spec.add_dependency "paper_trail", ">= 12"
+  spec.add_dependency "paper_trail", ">= 17.0", "< 18"
   spec.metadata["rubygems_mfa_required"] = "true"
 end

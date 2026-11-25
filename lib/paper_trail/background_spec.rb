@@ -44,12 +44,12 @@ class DummyClass < SuperDummyClass
     {}
   end
 
-  def data_for_update_columns
-    {}
+  def data_for_update
+    { source: :data_for_update }
   end
 
-  def force
-    true
+  def data_for_update_columns
+    { source: :data_for_update_columns }
   end
 end
 
@@ -91,12 +91,20 @@ RSpec.describe PaperTrail::Background do
       it "triggers a write if record is opted in and async is true" do
         allow(record).to receive(:paper_trail_options).and_return(async: true)
         allow(PaperTrail::Events::Create).to receive(:new).and_return(WithData.new({}))
-        allow(record.class).to receive(:paper_trail).and_return(WithVersionClass.new(Class))
-        allow(record.class).to receive(:after_transaction).and_yield
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
 
         DummyClass.new(options: { enabled: true }, record:).record_create
 
         expect(VersionJob).to have_received(:perform_later)
+      end
+
+      it "returns nil instead of the enqueued job, so paper_trail-association_tracking finds no version" do
+        allow(VersionJob).to receive(:perform_later).and_return(VersionJob.new)
+        allow(record).to receive(:paper_trail_options).and_return(async: true)
+        allow(PaperTrail::Events::Create).to receive(:new).and_return(WithData.new({}))
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
+
+        expect(DummyClass.new(options: { enabled: true }, record:).record_create).to be_nil
       end
     end
   end
@@ -136,8 +144,7 @@ RSpec.describe PaperTrail::Background do
       it "triggers a write if record is opted in and async is true" do
         allow(record).to receive_messages(paper_trail_options: { async: true }, new_record?: false)
         allow(PaperTrail::Events::Destroy).to receive(:new).and_return(WithData.new({}))
-        allow(record.class).to receive(:paper_trail).and_return(WithVersionClass.new(Class))
-        allow(record.class).to receive(:after_transaction).and_yield
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
 
         DummyClass.new(options: { enabled: true }, record:).record_destroy("after")
 
@@ -173,12 +180,21 @@ RSpec.describe PaperTrail::Background do
       it "triggers a write if record is opted in and async is true" do
         allow(record).to receive_messages(paper_trail_options: { async: true }, new_record?: false)
         allow(PaperTrail::Events::Update).to receive(:new).and_return(WithData.new({}))
-        allow(record.class).to receive(:paper_trail).and_return(WithVersionClass.new(Class))
-        allow(record.class).to receive(:after_transaction).and_yield
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
 
         DummyClass.new(options: { enabled: true }, record:).record_update(force: true, in_after_callback: true, is_touch: false)
 
         expect(VersionJob).to have_received(:perform_later)
+      end
+
+      it "merges data_for_update into the job payload" do
+        allow(record).to receive_messages(paper_trail_options: { async: true }, new_record?: false)
+        allow(PaperTrail::Events::Update).to receive(:new).and_return(WithData.new({}))
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
+
+        DummyClass.new(options: { enabled: true }, record:).record_update(force: true, in_after_callback: true, is_touch: false)
+
+        expect(VersionJob).to have_received(:perform_later).with("Class", hash_including(source: :data_for_update), :update)
       end
     end
   end
@@ -210,12 +226,21 @@ RSpec.describe PaperTrail::Background do
       it "triggers a write if record is opted in and async is true" do
         allow(record).to receive_messages(paper_trail_options: { async: true }, new_record?: false)
         allow(PaperTrail::Events::Update).to receive(:new).and_return(WithData.new({}))
-        allow(record.class).to receive(:paper_trail).and_return(WithVersionClass.new(Class))
-        allow(record.class).to receive(:after_transaction).and_yield
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
 
         DummyClass.new(options: { enabled: true }, record:).record_update_columns({})
 
         expect(VersionJob).to have_received(:perform_later)
+      end
+
+      it "merges data_for_update_columns into the job payload" do
+        allow(record).to receive_messages(paper_trail_options: { async: true }, new_record?: false)
+        allow(PaperTrail::Events::Update).to receive(:new).and_return(WithData.new({}))
+        allow(record.class).to receive_messages(current_transaction: ActiveRecord::Transaction::NULL_TRANSACTION, paper_trail: WithVersionClass.new(Class))
+
+        DummyClass.new(options: { enabled: true }, record:).record_update_columns({})
+
+        expect(VersionJob).to have_received(:perform_later).with("Class", hash_including(source: :data_for_update_columns), :update)
       end
     end
   end
